@@ -50,8 +50,9 @@ class Bot():
     def statuss(self):
         self.updateDataBase()
         tmpdf = self.Top.head(min(self.max, len(self.Top)))
+        title = f"**{self.title}**"
         del tmpdf['DiscordID']
-        detial= tmpdf.to_markdown(index=False, tablefmt ="jupyter")
+        detial= title + "\n" + tmpdf.to_markdown(index=False, tablefmt ="jupyter")
         return detial
 
     def check(self,message):

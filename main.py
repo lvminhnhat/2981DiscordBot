@@ -14,7 +14,7 @@ intents.messages = True
 intents.message_content = True
 client = commands.Bot(command_prefix='/', intents=intents)
 bot = Bot()
-keep_alive()
+
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
@@ -47,4 +47,5 @@ async def on_message(message):
         elif message.content.startswith(('check', 'c', '.check')):
             await message.reply(bot.check_coins(message))
     await client.process_commands(message)
+keep_alive()
 client.run(os.getenv('TOKEN'))
