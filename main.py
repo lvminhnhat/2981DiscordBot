@@ -3,6 +3,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 import os
 from cmd import Bot
+from keep_alive import keep_alive
 #config
 load_dotenv()
 intents = discord.Intents.default()
@@ -13,6 +14,7 @@ intents.messages = True
 intents.message_content = True
 client = commands.Bot(command_prefix='/', intents=intents)
 bot = Bot()
+keep_alive()
 @client.event
 async def on_ready():
     print('We have logged in as {0.user}'.format(client))
@@ -28,12 +30,21 @@ async def on_message(message):
     serverId = str(message.guild.id)
     serverName = str(message.guild.name)
     print( f"{username} said : '{userMessage}' form {channel}, server id: {serverId}, server name: {serverName}")
+    # kiểm tra xem người chơi có chat trong đúng channel không?
+    if channel != "mge-auction":
+        return
+    # kiểm tra xem người chơi có chat trong đúng server không?
+    if serverId != "1054746385481736192":
+        return
     #print(message)
-    if message.content.startswith('.help'):
-        await message.channel.send(bot.help())
-    if message.content.startswith('.mge'):
-        await message.channel.send(bot.bid(message))
-    if message.content.startswith('.rank'):
-        await message.channel.send(bot.statuss())
+    async with message.channel.typing():
+        if message.content.startswith(('help', 'h', '.help')):
+            await message.reply(bot.help())
+        elif message.content.startswith(('mge', 'm', '.mge')):
+            await message.reply(bot.bid(message))
+        elif message.content.startswith(('rank', 'r', '.rank')):
+            await message.reply(bot.statuss())
+        elif message.content.startswith(('check', 'c', '.check')):
+            await message.reply(bot.check_coins(message))
     await client.process_commands(message)
 client.run(os.getenv('TOKEN'))

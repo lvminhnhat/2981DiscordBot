@@ -21,7 +21,8 @@ class Bot():
     def help(self):
         detial=  {
             "mge" : "MGE Auction: .mge yourID coins . EX: .mge 123456 123",
-            "rank" : "Check Top MGE Auction: .rank"
+            "rank" : "Check Top MGE Auction: .rank",
+            "check" : "Check your coins: .check yourID . EX: .check 123456"
         }
         detial = self.mdConvert(detial)
         return detial
@@ -31,12 +32,12 @@ class Bot():
         ggSheet = Sheet()
         ggSheet.writeData(self.title,self.Top)
         bidContent = {
-            "Title" : self.title,
-            "Start Time" : self.sTime,
-            "End Time" : self.eTime,
-            "Hight Top" : self.hTop,
-            "Low top" : self.lTop,
-            "States": self.states,
+            "Title" : f"**{self.title}**",
+            "Start Time" : f"**{self.sTime}**",
+            "End Time" : f"**{self.eTime}**",
+            "Hight Top" : f"**{self.hTop}**",
+            "Low top" : f"**{self.lTop}**",
+            "States": f"**{self.states}**"
         }
         detial= self.mdConvert(bidContent)
         return detial
@@ -61,16 +62,43 @@ class Bot():
         self.discordUserId = str(message.author.id)
         print(len(self.listContent))
         if len(self.listContent)<3:
-            return "Please check the entered command for accuracy and verify the coin's value for auction."
+            return "Error: *Command not recognized. - 명령어를 인식하지 못함 - Lệnh vừa nhập không đúng*"
         self.UID = str(self.listContent[1])
         self.bidCoins = self.listContent[2]
         if  not self.bidCoins.isdigit():
-            return "Please check the entered command for accuracy and verify the coin's value for auction."
+            return "Error: *Command not recognized. - 명령어를 인식하지 못함 - Lệnh vừa nhập không đúng*"
         self.bidCoins = int(self.bidCoins)
         self.updateDataBase()
         #Kiểm tra thời gian có hợp lệ không. 
         if  not self.check_date_within_range(self.sTime , self.eTime):
-            return "Auction period has ended or has not started"
+            return "The activity has not started yet - 활동이 아직 시작되지 않았습니다 - Hoạt động chưa bắt đầu"
+        # kiểm tra ID có hợp lệ không?
+        coinsTable = ggSheet.readData("Coins")
+        if self.UID not in coinsTable["ID"].values:
+            return "Error: ID not True. - ID가 올바르지 않습니다. - ID không đúng."
+        
+        # lấy tên và số coins hiện tại của người chơi.
+        row = coinsTable.loc[coinsTable["ID"] == self.UID]
+        self.PlayerName = row["Name"].values[0]
+        self.PlayerCoins = row["Coins"].values[0]
+        if int(self.PlayerCoins) < int(self.bidCoins):
+            return f"The current coins is not enough. Governor: {self.PlayerName} : {self.PlayerCoins}"
+        # kiểm tra xem người chơi đã bid chưa.
+        if self.UID in self.Top["PlayerID"].values:
+            return self.update_coins(self.UID, self.discordUserId ,  self.bidCoins)
+        else:
+            return self.add_data(0,self.discordUserId,self.UID,self.bidCoins)
+
+    def check_coins(self, message):
+        ggSheet = Sheet()
+        self.updateDataBase()
+        uContent = str(message.content)
+        self.listContent = uContent.split()
+        self.discordUserId = str(message.author.id)
+        if len(self.listContent)<2:
+            return "Error: *Command not recognized. - 명령어를 인식하지 못함 - Lệnh vừa nhập không đúng*"
+        self.UID = str(self.listContent[1])
+        self.updateDataBase()
         # kiểm tra ID có hợp lệ không?
         coinsTable = ggSheet.readData("Coins")
         if self.UID not in coinsTable["ID"].values:
@@ -80,15 +108,8 @@ class Bot():
         row = coinsTable.loc[coinsTable["ID"] == self.UID]
         self.PlayerName = row["Name"].values[0]
         self.PlayerCoins = row["Coins"].values[0]
-        if int(self.PlayerCoins) < int(self.bidCoins):
-            return f"The current number of coins is not enough. \n {self.PlayerName} : {self.PlayerCoins}"
-        # kiểm tra xem người chơi đã bid chưa.
-        if self.UID in self.Top["PlayerID"].values:
-            return self.update_coins(self.UID, self.discordUserId ,  self.bidCoins)
-        else:
-            return self.add_data(0,self.discordUserId,self.UID,self.bidCoins)
-
-           
+        return f"Governor: *{self.PlayerName}* \nCoin: **{self.PlayerCoins}**"   
+      
 
     def update_coins(self, player_id, discord_id, new_coins):
         for i in range(len(self.Top["PlayerID"])):
@@ -96,7 +117,7 @@ class Bot():
                 self.Top["Coins"][i] = new_coins
                 self.updateTop()
                 return "Complete your auction update."
-        return "You are not allowed to bid for another account."
+        return "You cannot bid for another account. - 다른 계정에 입찰 할 수 없습니다- Bạn không thể đấu giá cho tài khoản khác."
     def add_data(self, top_value, discord_id, player_id, coins):
         data = {
             "Top": top_value,
