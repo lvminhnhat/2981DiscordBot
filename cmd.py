@@ -49,9 +49,20 @@ class Bot():
         return result
     def statuss(self):
         self.updateDataBase()
-        tmpdf = self.Top.head(min(self.max, len(self.Top)))
-        title = f"**{self.title}**"
-        del tmpdf['DiscordID']
+        tmpdf = self.Top.head(min(int(self.lTop) - int(self.hTop) + 1, len(self.Top)))
+        # add thêm cột tên người chơi
+        ggSheet = Sheet()
+        coinsTable = ggSheet.readData("Coins")
+        # add thêm cột tên người chơi dựa trên ID 
+        tmpdf.loc[:, "Name"] = tmpdf["PlayerID"].apply(lambda x: coinsTable.loc[coinsTable["ID"] == x]["Name"].values[0])
+        tmpdf = tmpdf[["Top", "Name", "Coins"]]
+        tmpdf = tmpdf.rename(columns={"Top": "Rank", "Name": "Governor", "Coins": "Coins"})
+        # điều chỉnh độ rộng của cột Rank luôn là 5 nếu thiếu tự thêm khoảng trắng vào bên phải
+        tmpdf["Rank"] = tmpdf["Rank"].apply(lambda x: str(x).ljust(5))
+        # điều chỉnh độ rộng của cột Governor luôn là 20 nếu thiếu tự thêm khoảng trắng vào bên phải
+        tmpdf["Governor"] = tmpdf["Governor"].apply(lambda x: str(x).ljust(20))
+        title = f"**{self.title}** **{self.sTime}** - **{self.eTime}**\n" 
+
         detial= title + "\n" + tmpdf.to_markdown(index=False, tablefmt ="jupyter")
         return detial
 
@@ -72,7 +83,7 @@ class Bot():
         self.updateDataBase()
         #Kiểm tra thời gian có hợp lệ không. 
         if  not self.check_date_within_range(self.sTime , self.eTime):
-            return "The activity has not started yet - 활동이 아직 시작되지 않았습니다 - Hoạt động chưa bắt đầu"
+            return "The activity has not started yet - 경매가 아직 시작되지 않았습니다 - Hoạt động chưa bắt đầu"
         # kiểm tra ID có hợp lệ không?
         coinsTable = ggSheet.readData("Coins")
         if self.UID not in coinsTable["ID"].values:

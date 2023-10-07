@@ -38,13 +38,13 @@ async def on_message(message):
         return
     #print(message)
     async with message.channel.typing():
-        if message.content.startswith(('help', 'h', '.help')):
+        if message.content.startswith(('.h', '.help')):
             await message.reply(bot.help())
-        elif message.content.startswith(('mge', 'm', '.mge')):
+        elif message.content.startswith(('.m', '.mge')):
             await message.reply(bot.bid(message))
-        elif message.content.startswith(('rank', 'r', '.rank')):
+        elif message.content.startswith(('.r', '.rank')):
             await message.reply(bot.statuss())
-        elif message.content.startswith(('check', 'c', '.check')):
+        elif message.content.startswith(('.c', '.check')):
             await message.reply(bot.check_coins(message))
     await client.process_commands(message)
 keep_alive()
