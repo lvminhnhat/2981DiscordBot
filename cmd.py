@@ -126,6 +126,8 @@ class Bot():
     def update_coins(self, player_id, discord_id, new_coins):
         for i in range(len(self.Top["PlayerID"])):
             if self.Top["PlayerID"][i] == player_id and self.Top["DiscordID"][i] == discord_id:
+                if new_coins <= self.Top["Coins"][i]:
+                    return "Please enter an amount greater than the current bid - 현재 입찰가보다 높은 금액을 입력하세요 - Vui lòng nhập một số lượng lớn hơn số lượng đã đấu giá."
                 self.Top["Coins"][i] = new_coins
                 self.updateTop()
                 return "Complete your auction update."
